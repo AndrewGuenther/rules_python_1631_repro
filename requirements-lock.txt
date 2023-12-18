@@ -1,0 +1,2 @@
+bazel-runfiles==0.27.1 ; python_version >= "3.8" and python_version < "3.9" \
+    --hash=sha256:89ae658e4e6e8714db99bea0e5a4c9c6b171316fc944968efd7502678910169a
