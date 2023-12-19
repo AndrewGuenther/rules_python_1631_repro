@@ -15,5 +15,12 @@ pip.parse(
     hub_name = "pip",
     python_version = "3.8",
 )
+pip.override(
+    file = "bazel_runfiles-0.27.1-py3-none-any.whl",
+    patch_strip = 1,
+    patches = [
+        "//:pr_1634.patch",
+    ],
+)
 
 use_repo(pip, "pip")

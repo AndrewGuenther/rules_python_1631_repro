@@ -1,0 +1,33 @@
+From 4bf451b5b8e9e2f99257002fd7b387d07925d981 Mon Sep 17 00:00:00 2001
+From: Fabian Meumertzheim <fabian@meumertzhe.im>
+Date: Tue, 19 Dec 2023 10:57:06 +0100
+Subject: [PATCH] Fix `runfiles.CurrentRepository` with non-hermetic `sys.path`
+
+When using Python 3.10 or earlier, the first `sys.path` entry is the
+directory containing the script. This can result in modules being
+loaded from the source root rather than the runfiles root, which the
+runfiles library previously didn't support.
+---
+ runfiles/runfiles.py | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/runfiles/runfiles.py b/runfiles/runfiles.py
+index 9bdb61b56..21edb3988 100644
+--- a/runfiles/runfiles.py
++++ b/runfiles/runfiles.py
+@@ -212,6 +212,15 @@ def CurrentRepository(self, frame=1):
+             raise ValueError("failed to determine caller's file path")
+         caller_runfiles_path = os.path.relpath(caller_path, self._python_runfiles_root)
+         if caller_runfiles_path.startswith(".." + os.path.sep):
++            # With Python 3.10 and earlier, sys.path contains the directory
++            # of the script, which can result in a module being loaded from
++            # outside the runfiles tree. In this case, assume that the module is
++            # located in the main repository.
++            # TODO: This doesn't cover the case of a script being run from an
++            #       external repository, which could be heuristically detected
++            #       by parsing the script's path.
++            if sys.path[0] != self._python_runfiles_root:
++                return ""
+             raise ValueError(
+                 "{} does not lie under the runfiles root {}".format(
+                     caller_path, self._python_runfiles_root
